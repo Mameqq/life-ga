@@ -1,63 +1,58 @@
-#include <ncurses.h>
+#include <stdio.h> 
+#include <stdlib.h> 
+#include <ncurses.h> 
 
-#define WIDTH 20
-#define HEIGHT 20
+#define WIDTH 80 
+#define HEIGHT 25 
 
-void draw(int grid[HEIGHT][WIDTH]) {
-    for (int y = 0; y < HEIGHT; y++) {
-        for (int x = 0; x < WIDTH; x++) {
-            if (grid[y][x] == 1) {
-                mvprintw(y, x, "*");
-            } else {
-                mvprintw(y, x, ".");
-            }
-        }
-    }
-}
+void initialize(char grid[HEIGHT][WIDTH]) { 
+    for (int y = 0; y < HEIGHT; y++) 
+        for (int x = 0; x < WIDTH; x++) 
+            grid[y][x] = 0; 
+} 
 
-void update(int grid[HEIGHT][WIDTH]) {
-    int new_grid[HEIGHT][WIDTH] = {0};
-    for (int y = 0; y < HEIGHT; y++) {
-        for (int x = 0; x < WIDTH; x++) {
-            int neighbors = 0;
-            for (int i = -1; i <= 1; i++) {
-                for (int j = -1; j <= 1; j++) {
-                    if (i == 0 && j == 0) continue;
-                    int ny = (y + i + HEIGHT) % HEIGHT;
-                    int nx = (x + j + WIDTH) % WIDTH;
-                    neighbors += grid[ny][nx];
-                }
-            }
-            if (grid[y][x] == 1 && (neighbors == 2 || neighbors == 3)) {
-                new_grid[y][x] = 1;
-            } else if (grid[y][x] == 0 && neighbors == 3) {
-                new_grid[y][x] = 1;
-            }
-        }
-    }
-    for (int y = 0; y < HEIGHT; y++) {
-        for (int x = 0; x < WIDTH; x++) {
-            grid[y][x] = new_grid[y][x];
-        }
-    }
-}
+void display(char grid[HEIGHT][WIDTH]) { 
+    for (int y = 0; y < HEIGHT; y++) { 
+        for (int x = 0; x < WIDTH; x++) { 
+            mvaddch(y, x, grid[y][x] ? '*' : ' '); 
+        } 
+    } 
+    refresh(); 
+} 
 
-int main() {
-    int grid[HEIGHT][WIDTH] = {0};
-    // Initialize a simple pattern
-    grid[5][3] = grid[5][4] = grid[5][5] = 1;
-    
-    initscr();
-    nodelay(stdscr, TRUE);
-    keypad(stdscr, TRUE);
-    while (1) {
-        clear();
-        draw(grid);
-        refresh();
-        update(grid);
-        napms(100);
-        if (getch() != ERR) break;
-    }
-    endwin();
-    return 0;
-}
+void update(char grid[HEIGHT][WIDTH]) { 
+    char newGrid[HEIGHT][WIDTH]; 
+    for (int y = 0; y < HEIGHT; y++) 
+        for (int x = 0; x < WIDTH; x++) { 
+            int liveNeighbors = 0; 
+            for (int dy = -1; dy <= 1; dy++) 
+                for (int dx = -1; dx <= 1; dx++) 
+                    if (dx || dy) 
+                        liveNeighbors += grid[(y + dy + HEIGHT) % HEIGHT][(x + dx + WIDTH) % WIDTH]; 
+            newGrid[y][x] = (liveNeighbors == 3 || (grid[y][x] && liveNeighbors == 2)); 
+        } 
+    for (int y = 0; y < HEIGHT; y++) 
+        for (int x = 0; x < WIDTH; x++) 
+            grid[y][x] = newGrid[y][x]; 
+} 
+
+int main() { 
+    char grid[HEIGHT][WIDTH]; 
+    initialize(grid); 
+    initscr(); 
+    noecho(); 
+    keypad(stdscr, TRUE); 
+    nodelay(stdscr, TRUE); 
+    int delay = 100; 
+    while (1) { 
+        display(grid); 
+        update(grid); 
+        int ch = getch(); 
+        if (ch == ' ') break; 
+        if (ch == 'A' || ch == 'a') delay = (delay > 10) ? delay - 10 : delay; 
+        if (ch == 'Z' || ch == 'z') delay += 10; 
+        usleep(delay * 1000); 
+    } 
+    endwin(); 
+    return 0; 
+} 

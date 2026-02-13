@@ -1,15 +1,13 @@
-                            
-                            
-            .  .                 
-                           
-          . .  .               
-                            
-              .  .  .           
-                            
-                             
-                             
-                             
-                            
-                            
-                            
-                            
+# Glider Pattern
+
+A glider is a pattern that moves across the grid in the game of Life:
+
+```
+.
+.
+**
+ *
+  *
+```
+
+This pattern will repeat itself in a moving fashion.
